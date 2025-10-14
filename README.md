@@ -10,7 +10,7 @@ Standalone JavaFX frontend that connects to the Spring Boot backend via REST API
 ✅ JavaFX UI (FXML + Scene Builder Ready)  
 
 ## Run
-1. Ensure backend is running on port 8080.
+1. Ensure backend is running on port 8099.
 2. Run frontend:
    ```bash
    ./gradlew run
