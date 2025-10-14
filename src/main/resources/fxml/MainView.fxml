@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.library.frontend.controller.BookController"
+            prefWidth="800" prefHeight="600">
+
+    <top>
+        <VBox spacing="8" padding="10">
+            <Label text="Library Management System" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+            <HBox spacing="10">
+                <TextField fx:id="searchField" promptText="Search by title or author..." onKeyReleased="#handleSearch" />
+                <Button text="Refresh" onAction="#loadBooks"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="10" padding="10">
+            <TableView fx:id="tableView">
+                <columns>
+                    <TableColumn fx:id="titleColumn" text="Title" prefWidth="200"/>
+                    <TableColumn fx:id="authorColumn" text="Author" prefWidth="200"/>
+                    <TableColumn fx:id="isbnColumn" text="ISBN" prefWidth="150"/>
+                    <TableColumn fx:id="publishedDateColumn" text="Published Date" prefWidth="150"/>
+                </columns>
+            </TableView>
+            <Pagination fx:id="pagination" pageCount="1"/>
+        </VBox>
+    </center>
+
+    <bottom>
+        <VBox spacing="10" padding="10">
+            <HBox spacing="10">
+                <Label text="Title:"/><TextField fx:id="titleField"/>
+                <Label text="Author:"/><TextField fx:id="authorField"/>
+            </HBox>
+            <HBox spacing="10">
+                <Label text="ISBN:"/><TextField fx:id="isbnField"/>
+                <Label text="Published Date:"/><TextField fx:id="publishedDateField"/>
+            </HBox>
+            <HBox spacing="10">
+                <Button text="Add" onAction="#handleAdd"/>
+                <Button text="Update" onAction="#handleUpdate"/>
+                <Button text="Delete" onAction="#handleDelete"/>
+            </HBox>
+        </VBox>
+    </bottom>
+</BorderPane>
