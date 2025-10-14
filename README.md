@@ -16,4 +16,4 @@ Standalone JavaFX frontend that connects to the Spring Boot backend via REST API
    ./gradlew run
    ```
 
-Backend endpoint: `http://localhost:8080/api/books`
+Backend endpoint: `http://localhost:8099/api/books`
