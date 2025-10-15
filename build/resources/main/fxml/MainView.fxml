@@ -15,7 +15,7 @@
             <Label text="Library Management System" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
             <HBox spacing="10">
                 <TextField fx:id="searchField" promptText="Search by title or author..." onKeyReleased="#handleSearch" />
-                <Button text="Refresh" onAction="#loadBooks"/>
+                <Button text="Refresh" onAction="#handleRefresh"/>
             </HBox>
         </VBox>
     </top>

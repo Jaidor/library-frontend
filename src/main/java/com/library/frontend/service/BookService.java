@@ -6,15 +6,20 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
 
 public class BookService {
 
     private static final String BASE_URL = "http://localhost:8099/api/books";
     private static final String API_KEY = "sk_test_D0B7363B3C13480BBB1E12B0398B174D";
+    private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    /**
+     * Get Header
+     *
+     * @return HttpHeaders
+     */
     private HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.set("x-api-key", API_KEY);
@@ -22,6 +27,12 @@ public class BookService {
         return headers;
     }
 
+    /**
+     * Add Books
+     *
+     * @param book Book
+     * @return ApiResponseWrapper.Data<Book>
+     */
     public ApiResponseWrapper.Data<Book> addBook(Book book) {
         HttpEntity<Book> entity = new HttpEntity<>(book, getHeaders());
         ResponseEntity<ApiResponseWrapper> response = restTemplate.exchange(
@@ -34,6 +45,13 @@ public class BookService {
         return null;
     }
 
+    /**
+     * Update book
+     *
+     * @param uuid String
+     * @param book Book
+     * @return ApiResponseWrapper.Data<Book>
+     */
     public ApiResponseWrapper.Data<Book> updateBook(String uuid, Book book) {
         HttpEntity<Book> entity = new HttpEntity<>(book, getHeaders());
         ResponseEntity<ApiResponseWrapper> response = restTemplate.exchange(
@@ -45,6 +63,12 @@ public class BookService {
         return null;
     }
 
+    /**
+     * Delete book
+     *
+     * @param uuid String
+     * @return ApiResponseWrapper.Data<Void>
+     */
     public ApiResponseWrapper.Data<Void> deleteBook(String uuid) {
         HttpEntity<Void> entity = new HttpEntity<>(getHeaders());
         ResponseEntity<ApiResponseWrapper> response = restTemplate.exchange(
@@ -56,17 +80,23 @@ public class BookService {
         return null;
     }
 
-    public List<Book> fetchBooks() {
+    /**
+     * Fetch books
+     *
+     * @param page int
+     * @return ApiResponseWrapper.Data<Book>
+     */
+    public ApiResponseWrapper.Data<Book> fetchBooks(int page) {
+        String url = BASE_URL + "?page=" + page + "&size=" + DEFAULT_PAGE_SIZE;
         HttpEntity<Void> entity = new HttpEntity<>(getHeaders());
         ResponseEntity<ApiResponseWrapper<Book>> response = restTemplate.exchange(
-                BASE_URL, HttpMethod.GET, entity,
+                url, HttpMethod.GET, entity,
                 new ParameterizedTypeReference<ApiResponseWrapper<Book>>() {}
         );
 
-        ApiResponseWrapper.Data<Book> body = response.getBody().getData();
-        if (body != null && body.getMeta() != null) {
-            return body.getMeta().getBooks();
+        if (response.getBody() != null) {
+            return response.getBody().getData();
         }
-        return List.of();
+        return null;
     }
 }

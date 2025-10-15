@@ -8,8 +8,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 public class BookController {
 
@@ -24,18 +23,24 @@ public class BookController {
     private final BookService bookService = new BookService();
     private final ObservableList<Book> books = FXCollections.observableArrayList();
     private static final int ROWS_PER_PAGE = 10;
+    private int currentPage = 0;
+    private int totalPages = 1;
+    private String currentQuery = "";
 
+    /**
+     * Initialize
+     */
     @FXML
     public void initialize() {
-        // Set up table columns
+        // TableView column bindings
         titleColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getTitle()));
         authorColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getAuthor()));
         isbnColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getIsbn()));
         publishedDateColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getPublishedDate()));
 
-        // Add selection listener to populate fields when a row is selected
+        // Populate form fields when selecting a row
         tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-            if(newSel != null){
+            if (newSel != null) {
                 titleField.setText(newSel.getTitle());
                 authorField.setText(newSel.getAuthor());
                 isbnField.setText(newSel.getIsbn());
@@ -43,53 +48,73 @@ public class BookController {
             }
         });
 
-        // Load books and setup pagination
-        loadBooks();
-        setupPagination();
+        // Setup server-side pagination
+        pagination.setPageFactory(this::loadPage);
+
+        // Load first page
+        loadBooks(0);
     }
 
-    @FXML
-    public void loadBooks() {
-        try {
-            List<Book> list = bookService.fetchBooks();
-            books.setAll(list);
-            pagination.setPageCount((int) Math.ceil((double) books.size() / ROWS_PER_PAGE));
-            updateTable(0);
-        } catch (Exception e) {
-            AlertUtil.showError("Failed to load books: " + e.getMessage());
+    /**
+     * Load books
+     *
+     * @param page int
+     */
+    private void loadBooks(int page) {
+        var data = bookService.fetchBooks(page); // fetch page with optional search query
+        if (data != null && data.getMeta() != null) {
+            tableView.setItems(FXCollections.observableArrayList(data.getMeta().getBooks()));
+
+            Map<String, Object> paginationInfo = data.getMeta().getPagination();
+            currentPage = (int) paginationInfo.getOrDefault("currentPage", 0);
+            totalPages = (int) paginationInfo.getOrDefault("totalPages", 1);
+
+            pagination.setPageCount(totalPages);
+            pagination.setCurrentPageIndex(currentPage);
+        } else {
+            tableView.setItems(FXCollections.observableArrayList());
+            pagination.setPageCount(1);
+            pagination.setCurrentPageIndex(0);
         }
     }
 
-    private void updateTable(int index) {
-        int start = index * ROWS_PER_PAGE;
-        int end = Math.min(start + ROWS_PER_PAGE, books.size());
-        tableView.setItems(FXCollections.observableArrayList(books.subList(start, end)));
+    private TableView<Book> loadPage(int pageIndex) {
+        loadBooks(pageIndex);
+        return tableView;
     }
 
+    /**
+     * Search handler
+     */
+    @FXML
+    private void handleSearch() {
+        currentQuery = searchField.getText().trim();
+        loadBooks(0); // reset to first page
+    }
+
+    /**
+     * Handle refresh
+     */
+    @FXML
+    private void handleRefresh() {
+        searchField.clear();
+        currentQuery = "";
+        loadBooks(0);
+    }
+
+    /**
+     * Setup Pagination
+     */
     private void setupPagination() {
         pagination.setPageFactory(pageIndex -> {
-            updateTable(pageIndex);
-            return tableView;
+            loadBooks(pageIndex);
+            return tableView; // TableView will be updated inside loadBooks
         });
     }
 
-    @FXML
-    public void handleSearch() {
-        String query = searchField.getText().toLowerCase();
-        List<Book> filtered = books.stream()
-                .filter(b -> b.getTitle().toLowerCase().contains(query)
-                        || b.getAuthor().toLowerCase().contains(query))
-                .collect(Collectors.toList());
-        pagination.setPageCount((int) Math.ceil((double) filtered.size() / ROWS_PER_PAGE));
-        pagination.setPageFactory(pageIndex -> {
-            int start = pageIndex * ROWS_PER_PAGE;
-            int end = Math.min(start + ROWS_PER_PAGE, filtered.size());
-            tableView.setItems(FXCollections.observableArrayList(filtered.subList(start, end)));
-            return tableView;
-        });
-        if (!filtered.isEmpty()) pagination.setCurrentPageIndex(0);
-    }
-
+    /**
+     * Handle Add Books
+     */
     @FXML
     public void handleAdd() {
         try {
@@ -98,10 +123,11 @@ public class BookController {
             book.setAuthor(authorField.getText());
             book.setIsbn(isbnField.getText());
             book.setPublishedDate(publishedDateField.getText());
+
             var response = bookService.addBook(book);
             if (response != null && response.isStatus()) {
-                AlertUtil.showInfo(response.getMessage()); // Show backend message
-                loadBooks();
+                AlertUtil.showInfo(response.getMessage());
+                loadBooks(currentPage);
             } else {
                 AlertUtil.showError(response != null ? response.getMessage() : "Failed to add book.");
             }
@@ -110,6 +136,9 @@ public class BookController {
         }
     }
 
+    /**
+     * Handle Update
+     */
     @FXML
     public void handleUpdate() {
         Book selected = tableView.getSelectionModel().getSelectedItem();
@@ -121,15 +150,19 @@ public class BookController {
         selected.setAuthor(authorField.getText());
         selected.setIsbn(isbnField.getText());
         selected.setPublishedDate(publishedDateField.getText());
+
         var response = bookService.updateBook(selected.getUuid(), selected);
         if (response != null && response.isStatus()) {
             AlertUtil.showInfo(response.getMessage());
-            loadBooks();
+            loadBooks(currentPage);
         } else {
             AlertUtil.showError("Failed to update book.");
         }
     }
 
+    /**
+     * Handle Delete
+     */
     @FXML
     public void handleDelete() {
         Book selected = tableView.getSelectionModel().getSelectedItem();
@@ -140,7 +173,7 @@ public class BookController {
         var response = bookService.deleteBook(selected.getUuid());
         if (response != null && response.isStatus()) {
             AlertUtil.showInfo(response.getMessage());
-            loadBooks();
+            loadBooks(currentPage);
         } else {
             AlertUtil.showError("Failed to delete book.");
         }
