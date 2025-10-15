@@ -27,11 +27,23 @@ public class BookController {
 
     @FXML
     public void initialize() {
+        // Set up table columns
         titleColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getTitle()));
         authorColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getAuthor()));
         isbnColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getIsbn()));
         publishedDateColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getPublishedDate()));
 
+        // Add selection listener to populate fields when a row is selected
+        tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if(newSel != null){
+                titleField.setText(newSel.getTitle());
+                authorField.setText(newSel.getAuthor());
+                isbnField.setText(newSel.getIsbn());
+                publishedDateField.setText(newSel.getPublishedDate());
+            }
+        });
+
+        // Load books and setup pagination
         loadBooks();
         setupPagination();
     }
@@ -66,9 +78,16 @@ public class BookController {
         String query = searchField.getText().toLowerCase();
         List<Book> filtered = books.stream()
                 .filter(b -> b.getTitle().toLowerCase().contains(query)
-                          || b.getAuthor().toLowerCase().contains(query))
+                        || b.getAuthor().toLowerCase().contains(query))
                 .collect(Collectors.toList());
-        tableView.setItems(FXCollections.observableArrayList(filtered));
+        pagination.setPageCount((int) Math.ceil((double) filtered.size() / ROWS_PER_PAGE));
+        pagination.setPageFactory(pageIndex -> {
+            int start = pageIndex * ROWS_PER_PAGE;
+            int end = Math.min(start + ROWS_PER_PAGE, filtered.size());
+            tableView.setItems(FXCollections.observableArrayList(filtered.subList(start, end)));
+            return tableView;
+        });
+        if (!filtered.isEmpty()) pagination.setCurrentPageIndex(0);
     }
 
     @FXML
@@ -79,8 +98,13 @@ public class BookController {
             book.setAuthor(authorField.getText());
             book.setIsbn(isbnField.getText());
             book.setPublishedDate(publishedDateField.getText());
-            bookService.addBook(book);
-            loadBooks();
+            var response = bookService.addBook(book);
+            if (response != null && response.isStatus()) {
+                AlertUtil.showInfo(response.getMessage()); // Show backend message
+                loadBooks();
+            } else {
+                AlertUtil.showError(response != null ? response.getMessage() : "Failed to add book.");
+            }
         } catch (Exception e) {
             AlertUtil.showError("Failed to add book: " + e.getMessage());
         }
@@ -97,8 +121,13 @@ public class BookController {
         selected.setAuthor(authorField.getText());
         selected.setIsbn(isbnField.getText());
         selected.setPublishedDate(publishedDateField.getText());
-        bookService.updateBook(selected.getId(), selected);
-        loadBooks();
+        var response = bookService.updateBook(selected.getId(), selected);
+        if (response != null && response.isStatus()) {
+            AlertUtil.showInfo(response.getMessage());
+            loadBooks();
+        } else {
+            AlertUtil.showError("Failed to update book.");
+        }
     }
 
     @FXML
@@ -108,7 +137,12 @@ public class BookController {
             AlertUtil.showWarning("Select a book to delete.");
             return;
         }
-        bookService.deleteBook(selected.getId());
-        loadBooks();
+        var response = bookService.deleteBook(selected.getId());
+        if (response != null && response.isStatus()) {
+            AlertUtil.showInfo(response.getMessage());
+            loadBooks();
+        } else {
+            AlertUtil.showError("Failed to delete book.");
+        }
     }
 }

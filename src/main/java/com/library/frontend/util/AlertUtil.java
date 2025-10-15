@@ -17,4 +17,8 @@ public class AlertUtil {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+    public static void showInfo(String message) {
+        show(Alert.AlertType.INFORMATION, "Success", message);
+    }
 }
