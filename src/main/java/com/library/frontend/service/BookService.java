@@ -34,10 +34,10 @@ public class BookService {
         return null;
     }
 
-    public ApiResponseWrapper.Data<Book> updateBook(Long id, Book book) {
+    public ApiResponseWrapper.Data<Book> updateBook(String uuid, Book book) {
         HttpEntity<Book> entity = new HttpEntity<>(book, getHeaders());
         ResponseEntity<ApiResponseWrapper> response = restTemplate.exchange(
-                BASE_URL + "/" + id, HttpMethod.PUT, entity, ApiResponseWrapper.class
+                BASE_URL + "/" + uuid, HttpMethod.PUT, entity, ApiResponseWrapper.class
         );
         if(response.getBody() != null){
             return response.getBody().getData();
@@ -45,10 +45,10 @@ public class BookService {
         return null;
     }
 
-    public ApiResponseWrapper.Data<Void> deleteBook(Long id) {
+    public ApiResponseWrapper.Data<Void> deleteBook(String uuid) {
         HttpEntity<Void> entity = new HttpEntity<>(getHeaders());
         ResponseEntity<ApiResponseWrapper> response = restTemplate.exchange(
-                BASE_URL + "/" + id, HttpMethod.DELETE, entity, ApiResponseWrapper.class
+                BASE_URL + "/" + uuid, HttpMethod.DELETE, entity, ApiResponseWrapper.class
         );
         if(response.getBody() != null){
             return response.getBody().getData();

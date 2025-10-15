@@ -1,14 +1,14 @@
 package com.library.frontend.model;
 
 public class Book {
-    private Long id;
+    private String uuid;
     private String title;
     private String author;
     private String isbn;
     private String publishedDate;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getUuid() { return uuid; }
+    public void setId(Long id) { this.uuid = uuid; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }

@@ -121,7 +121,7 @@ public class BookController {
         selected.setAuthor(authorField.getText());
         selected.setIsbn(isbnField.getText());
         selected.setPublishedDate(publishedDateField.getText());
-        var response = bookService.updateBook(selected.getId(), selected);
+        var response = bookService.updateBook(selected.getUuid(), selected);
         if (response != null && response.isStatus()) {
             AlertUtil.showInfo(response.getMessage());
             loadBooks();
@@ -137,7 +137,7 @@ public class BookController {
             AlertUtil.showWarning("Select a book to delete.");
             return;
         }
-        var response = bookService.deleteBook(selected.getId());
+        var response = bookService.deleteBook(selected.getUuid());
         if (response != null && response.isStatus()) {
             AlertUtil.showInfo(response.getMessage());
             loadBooks();
