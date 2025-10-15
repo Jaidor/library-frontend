@@ -8,7 +8,10 @@
             prefWidth="800" prefHeight="600">
 
     <top>
-        <VBox spacing="8" padding="10">
+        <VBox spacing="8">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
             <Label text="Library Management System" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
             <HBox spacing="10">
                 <TextField fx:id="searchField" promptText="Search by title or author..." onKeyReleased="#handleSearch" />
@@ -18,7 +21,10 @@
     </top>
 
     <center>
-        <VBox spacing="10" padding="10">
+        <VBox spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
             <TableView fx:id="tableView">
                 <columns>
                     <TableColumn fx:id="titleColumn" text="Title" prefWidth="200"/>
@@ -32,7 +38,10 @@
     </center>
 
     <bottom>
-        <VBox spacing="10" padding="10">
+        <VBox spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
             <HBox spacing="10">
                 <Label text="Title:"/><TextField fx:id="titleField"/>
                 <Label text="Author:"/><TextField fx:id="authorField"/>
